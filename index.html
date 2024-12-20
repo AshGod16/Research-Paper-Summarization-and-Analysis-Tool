@@ -4,28 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Research Paper Summarizer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .section-content {
+            margin-bottom: 1.5rem;
+        }
+        .section-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1a365d;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .paragraph {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+    </style>
 </head>
-<body>
-    <h1>Upload Research Paper</h1>
-    <form id="uploadForm">
-        <input type="file" id="fileInput" name="file" accept="application/pdf" required>
-        <button type="submit">Upload</button>
-    </form>
-    <h2>Summary</h2>
-    <p id="summary"></p>
+<body class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Research Paper Summarizer</h1>
+            <p class="text-lg text-gray-600">Upload your PDF research paper and get a formatted summary</p>
+        </div>
+        
+        <div class="bg-white p-8 rounded-lg shadow-lg mb-8">
+            <form id="uploadForm" class="space-y-6">
+                <div class="flex flex-col items-center justify-center">
+                    <input type="file" 
+                           id="fileInput" 
+                           name="file" 
+                           accept="application/pdf" 
+                           required
+                           class="w-full max-w-xs mb-4">
+                    <button type="submit" 
+                            class="w-full max-w-xs bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        Generate Summary
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="summary" class="bg-white p-8 rounded-lg shadow-lg"></div>
+    </div>
+
     <script>
+        function parseTextIntoSections(text) {
+            const sections = {};
+            const sectionHeaders = ['Motivation:', 'Methodology:', 'Results:', 'Conclusion:'];
+            
+            // Create a regex pattern that matches any of the section headers
+            const headerPattern = new RegExp(`(${sectionHeaders.join('|')})`, 'gi');
+            
+            // Find all section header positions
+            const headerMatches = Array.from(text.matchAll(headerPattern));
+            
+            // If no headers found, return empty object
+            if (headerMatches.length === 0) {
+                return { 'Summary': text };
+            }
+            
+            // Process each section
+            headerMatches.forEach((match, index) => {
+                const currentHeader = match[0];
+                const startPos = match.index;
+                
+                // Find the end position (start of next section or end of text)
+                const nextMatch = headerMatches[index + 1];
+                const endPos = nextMatch ? nextMatch.index : text.length;
+                
+                // Extract section content
+                let content = text.slice(startPos + currentHeader.length, endPos).trim();
+                
+                // Store the section
+                sections[currentHeader] = content;
+            });
+            
+            return sections;
+        }
+
+        function formatParagraphs(text) {
+            // Split into sentences, handling multiple spaces and periods
+            const sentences = text.split(/(?<=[.!?])\s+/)
+                .map(sentence => sentence.trim())
+                .filter(Boolean)
+                .map(sentence => {
+                    // Capitalize first letter if it's not already capitalized
+                    if (sentence.length > 0 && /[a-z]/.test(sentence[0])) {
+                        return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+                    }
+                    return sentence;
+                });
+
+            // Group sentences into paragraphs (here we're using a simple approach)
+            const paragraphs = [];
+            let currentParagraph = [];
+            
+            sentences.forEach(sentence => {
+                currentParagraph.push(sentence);
+                // Start a new paragraph after every 2-3 sentences or if sentence is very short
+                if (currentParagraph.length >= 2 || sentence.length < 50) {
+                    paragraphs.push(currentParagraph.join(' '));
+                    currentParagraph = [];
+                }
+            });
+            
+            // Add any remaining sentences
+            if (currentParagraph.length > 0) {
+                paragraphs.push(currentParagraph.join(' '));
+            }
+            
+            return paragraphs;
+        }
+
+        function createFormattedSummary(sections) {
+            const summaryDiv = document.getElementById('summary');
+            summaryDiv.innerHTML = ''; // Clear previous content
+
+            for (const [header, content] of Object.entries(sections)) {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'section-content';
+
+                // Create and append header
+                const headerElement = document.createElement('h2');
+                headerElement.className = 'section-header';
+                headerElement.textContent = header.replace(':', '');
+                sectionDiv.appendChild(headerElement);
+
+                // Create and append paragraphs
+                const paragraphs = formatParagraphs(content);
+                paragraphs.forEach(paragraph => {
+                    if (paragraph.trim()) {  // Only add non-empty paragraphs
+                        const p = document.createElement('p');
+                        p.className = 'paragraph text-gray-700';
+                        p.textContent = paragraph;
+                        sectionDiv.appendChild(p);
+                    }
+                });
+
+                summaryDiv.appendChild(sectionDiv);
+            }
+        }
+
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const file = document.getElementById('fileInput').files[0];
             const formData = new FormData();
             formData.append('file', file);
             
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await response.json();
-            document.getElementById('summary').innerText = data.summary || 'Error generating summary';
+            // Show loading state
+            document.getElementById('summary').innerHTML = '<p class="text-center">Generating summary...</p>';
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.summary) {
+                    // Parse and format the summary
+                    const sections = parseTextIntoSections(data.summary);
+                    createFormattedSummary(sections);
+                } else {
+                    document.getElementById('summary').innerHTML = '<p class="text-red-600">Error generating summary</p>';
+                }
+            } catch (error) {
+                document.getElementById('summary').innerHTML = '<p class="text-red-600">Error generating summary</p>';
+            }
         });
     </script>
 </body>

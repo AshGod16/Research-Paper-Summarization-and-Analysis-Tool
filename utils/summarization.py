@@ -71,6 +71,9 @@ def post_process_summary(summary):
     return summary
 
 def summarize_text(text):
+    def adjust_max_length(input_text, fraction=0.5, min_length=10):
+        input_length = len(input_text.split())  # Count words in the input
+        return max(int(input_length * fraction), min_length)
     sections = extract_key_sections(text)
     
     # Process each section with appropriate parameters
@@ -87,8 +90,8 @@ def summarize_text(text):
         for chunk in tqdm(chunks, desc=f"Summarizing {section_name}"):
             summary = summarizer(
                 "summarize: " + chunk,
-                max_length=80,
-                min_length=30,
+                max_length=adjust_max_length(chunk, fraction=0.8),
+                min_length=10,
                 do_sample=False,
                 temperature=0.7
             )[0]['summary_text']
@@ -101,7 +104,7 @@ def summarize_text(text):
     if sections['abstract']:
         final_summary.append("Abstract: " + section_summaries['abstract'])
     if sections['introduction']:
-        final_summary.append("\nKey Points:\n" + section_summaries['introduction'])
+        final_summary.append("\nMotivation:\n" + section_summaries['introduction'])
     if sections['methods']:
         final_summary.append("\nMethodology:\n" + section_summaries['methods'])
     if sections['results']:
