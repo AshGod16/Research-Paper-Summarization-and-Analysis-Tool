@@ -18,7 +18,7 @@ This tool is built using state-of-the-art Transformer-based models and is design
 
 ### 🤖 **Key Technologies**
 - **Transformer Models**: Summarization powered by Hugging Face’s `facebook/bart-large-cnn`.
-- **PDF Processing**: Seamless text extraction with `pdfplumber`.
+- **PDF Processing**: Seamless text extraction using OCR.
 - **Web Framework**: Backend built with Flask.
 - **Frontend**: A simple HTML-based user interface.
 
@@ -26,6 +26,7 @@ This tool is built using state-of-the-art Transformer-based models and is design
 - Topic extraction and Q&A based on the document.
 - Export summaries as downloadable files.
 - Improved UI design with advanced styling.
+- Dynamic Section Summaries
 
 ---
 
@@ -93,7 +94,7 @@ Open your browser and navigate to `http://127.0.0.1:5000`.
 
 Install them via:
 ```bash
-pip install flask transformers torch pdfplumber
+pip install flask transformers torch pdf2image
 ```
 
 ---
@@ -124,12 +125,11 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 
 ---
 
-## Upcoming Features Checklist
-
-- [ ] Export summarized text to a downloadable file
-- [ ] Improved UI with advanced styling
-- [ ] Multi-language support for summarization
-- [ ] Enhanced PDF parsing for better text extraction
+## Current Bugs and Drawbacks
+- [ ] Trailing sentences are incomplete
+- [ ] We are occasionally missing the context of what is being said
+- [ ] Current version assumes that we have uniform section names for all papers
+- [ ] No access to GPU leading to long inference times
 
 ---
 
