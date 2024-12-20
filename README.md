@@ -100,11 +100,8 @@ pip install flask transformers torch pdfplumber
 
 ## Screenshots
 
-### **Home Page**
-![Home Page](https://via.placeholder.com/800x400?text=Home+Page)
-
-### **Summary Output**
-![Summary Output](https://via.placeholder.com/800x400?text=Summary+Output)
+### **UI**
+![UI](./screenshot.png)
 
 ---
 

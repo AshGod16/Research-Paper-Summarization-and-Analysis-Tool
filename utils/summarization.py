@@ -90,8 +90,8 @@ def summarize_text(text):
         for chunk in tqdm(chunks, desc=f"Summarizing {section_name}"):
             summary = summarizer(
                 "summarize: " + chunk,
-                max_length=adjust_max_length(chunk, fraction=0.8),
-                min_length=10,
+                max_length=adjust_max_length(chunk, fraction=0.7),
+                min_length=25,
                 do_sample=False,
                 temperature=0.7
             )[0]['summary_text']

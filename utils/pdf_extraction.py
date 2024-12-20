@@ -64,4 +64,5 @@ def extract_text_from_pdf(file_path):
         full_text.append(text)
     
     full_text = " ".join(full_text)
+    print(full_text[:500])
     return clean_text(full_text)
